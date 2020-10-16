@@ -1,10 +1,9 @@
-import React, { PureComponent } from 'react';
+import React, { PureComponent, PropTypes } from 'react';
 import { PanResponder, View } from 'react-native';
 import Svg, { Circle, G, LinearGradient, Path, Defs, Stop } from 'react-native-svg';
 import range from 'lodash.range';
 import { interpolateHcl as interpolateGradient } from 'd3-interpolate';
 import ClockFace from './ClockFace';
-import PropTypes from 'prop-types'; // ES6
 
 
 function calculateArcColor(index0, segments, gradientColorFrom, gradientColorTo) {
@@ -48,22 +47,6 @@ function getGradientId(index) {
 
 export default class CircularSlider extends PureComponent {
 
-  static propTypes = {
-    onUpdate: PropTypes.func.isRequired,
-    startAngle: PropTypes.number.isRequired,
-    angleLength: PropTypes.number.isRequired,
-    segments: PropTypes.number,
-    strokeWidth: PropTypes.number,
-    radius: PropTypes.number,
-    gradientColorFrom: PropTypes.string,
-    gradientColorTo: PropTypes.string,
-    showClockFace: PropTypes.bool,
-    clockFaceColor: PropTypes.string,
-    bgCircleColor: PropTypes.string,
-    stopIcon: PropTypes.element,
-    startIcon: PropTypes.element,
-  }
-
   static defaultProps = {
     segments: 5,
     strokeWidth: 40,
@@ -72,6 +55,7 @@ export default class CircularSlider extends PureComponent {
     gradientColorTo: '#ffcf00',
     clockFaceColor: '#9d9d9d',
     bgCircleColor: '#171717',
+    eventsData: []
   }
 
   state = {
@@ -83,7 +67,7 @@ export default class CircularSlider extends PureComponent {
     this._sleepPanResponder = PanResponder.create({
       onMoveShouldSetPanResponder: (evt, gestureState) => true,
       onMoveShouldSetPanResponderCapture: (evt, gestureState) => true,
-      onPanResponderGrant: (evt, gestureState) => this.setCircleCenter(),
+
       onPanResponderMove: (evt, { moveX, moveY }) => {
         const { circleCenterX, circleCenterY } = this.state;
         const { angleLength, startAngle, onUpdate } = this.props;
@@ -108,7 +92,7 @@ export default class CircularSlider extends PureComponent {
     this._wakePanResponder = PanResponder.create({
       onMoveShouldSetPanResponder: (evt, gestureState) => true,
       onMoveShouldSetPanResponderCapture: (evt, gestureState) => true,
-      onPanResponderGrant: (evt, gestureState) => this.setCircleCenter(),
+
       onPanResponderMove: (evt, { moveX, moveY }) => {
         const { circleCenterX, circleCenterY } = this.state;
         const { angleLength, startAngle, onUpdate } = this.props;
@@ -143,7 +127,7 @@ export default class CircularSlider extends PureComponent {
 
   render() {
     const { startAngle, angleLength, segments, strokeWidth, radius, gradientColorFrom, gradientColorTo, bgCircleColor,
-      showClockFace, clockFaceColor, startIcon, stopIcon } = this.props;
+      showClockFace, clockFaceColor, startIcon, stopIcon, eventsData } = this.props;
 
     const containerWidth = this.getContainerWidth();
 
@@ -179,7 +163,7 @@ export default class CircularSlider extends PureComponent {
           <G transform={{ translate: `${strokeWidth/2 + radius + 1}, ${strokeWidth/2 + radius + 1}` }}>
             <Circle
               r={radius}
-              strokeWidth={strokeWidth}
+              strokeWidth={2}
               fill="transparent"
               stroke={bgCircleColor}
             />
@@ -200,12 +184,28 @@ export default class CircularSlider extends PureComponent {
                   <Path
                     d={d}
                     key={i}
-                    strokeWidth={strokeWidth}
+                    strokeWidth={2}
                     stroke={`url(#${getGradientId(i)})`}
                     fill="transparent"
                   />
                 )
               })
+            }
+
+            {eventsData.length > 0 && eventsData.map(event => range(segments).map(i => {
+                const { fromX, fromY, toX, toY } = calculateArcCircle(i, segments, radius, event?.startAngle, event?.angleLength);
+                const d = `M ${fromX.toFixed(2)} ${fromY.toFixed(2)} A ${radius} ${radius} 0 0 1 ${toX.toFixed(2)} ${toY.toFixed(2)}`;
+
+                return (
+                  <Path
+                    d={d}
+                    key={i}
+                    strokeWidth={5}
+                    stroke={event?.color}
+                    fill="transparent"
+                  />
+                )
+              }))
             }
 
             {/*
