@@ -116,7 +116,7 @@ export default class CircularSlider extends PureComponent {
   setCircleCenter = () => {
     this._circle.measure((x, y, w, h, px , py) => {
       const halfOfContainer = this.getContainerWidth() / 2;
-      this.setState({ circleCenterX: px + halfOfContainer, circleCenterY: py + halfOfContainer });
+      this.setState({ circleCenterX: 0 + halfOfContainer, circleCenterY: py + halfOfContainer });
     });
   }
 
